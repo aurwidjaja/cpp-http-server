@@ -9,6 +9,14 @@
 #include <iostream>
 #include <string>
 
+// const so that since we're passing in a pointer it won't modify the value
+// passed in
+std::string extract_path(const std::string& request_body) {
+  size_t first_space = request_body.find(' ');  // search from the beginning
+  size_t second_space = request_body.find(' ', first_space + 1);
+  return request_body.substr(first_space + 1, second_space - first_space - 1);
+}
+
 int main(int argc, char** argv) {
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
@@ -65,9 +73,28 @@ int main(int argc, char** argv) {
     std::cerr << "Failed to create client socket\n";
     return 1;
   }
-  std::string success_msg = "HTTP/1.1 200 OK\r\n\r\n";
-  ssize_t sent = send(client_fd, success_msg.c_str(), success_msg.size(), 0);
+
   std::cout << "Client connected\n";
+  char buffer[4096];
+  ssize_t len_req_bytes = recv(client_fd, &buffer, sizeof(buffer), 0);
+  if (len_req_bytes <= 0) {
+    std::cerr << "Failed to receive client request\n";
+    return 1;
+  }
+
+  std::string request_body(buffer, len_req_bytes);
+  std::string url_path = extract_path(request_body);
+  const std::string not_found_msg = "HTTP/1.1 404 Not Found\r\n\r\n";
+  const std::string success_msg = "HTTP/1.1 200 OK\r\n\r\n";
+
+  std::string msg;
+  if (url_path == "/") {
+    std::string msg = success_msg;
+  } else {
+    std::string msg = not_found_msg;
+  }
+  ssize_t sent = send(client_fd, msg.c_str(), msg.size(), 0);
+
   close(client_fd);
   close(server_fd);
 
