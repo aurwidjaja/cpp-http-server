@@ -29,11 +29,8 @@ int main(int argc, char** argv) {
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  // You can use print statements as follows for debugging, they'll be visible
-  // when running tests.
-  std::cout << "Logs from your program will appear here!\n";
+  std::cout << "Starting server on port 4221\n";
 
-  // TODO: Uncomment the code below to pass the first stage
   // SOCK_STREAM = ordered stream of data since HTTPS servers
   // are built on top of TCP ... SOCK_DGRAM = UDP
   // AF_INET = IPv4 ... VS AF_INET6 = IPv6
@@ -42,9 +39,8 @@ int main(int argc, char** argv) {
     std::cerr << "Failed to create server socket\n";
     return 1;
   }
-  //
-  // // Since the tester restarts your program quite often, setting SO_REUSEADDR
-  // // ensures that we don't run into 'Address already in use' errors
+  // SO_REUSEADDR lets us restart the server right away, without
+  // 'Address already in use' errors from old connections in TIME_WAIT
   int reuse = 1;
   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) <
       0) {

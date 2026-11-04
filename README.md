@@ -1,37 +1,42 @@
-[![progress-banner](https://backend.codecrafters.io/progress/http-server/40c6b476-8985-4d33-931e-95f5d9ecf4bd)](https://app.codecrafters.io/users/aurwidjaja?r=2qF)
+# cpp-http-server
 
-This is a starting point for C++ solutions to the
-["Build Your Own HTTP server" Challenge](https://app.codecrafters.io/courses/http-server/overview).
+An HTTP/1.1 server written from scratch in C++, using POSIX sockets directly.
 
-[HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) is the
-protocol that powers the web. In this challenge, you'll build a HTTP/1.1 server
-that is capable of serving multiple clients.
+## Requirements
 
-Along the way you'll learn about TCP servers,
-[HTTP request syntax](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html),
-and more.
+- A C++23 compiler (Apple clang or a recent clang/gcc)
+- CMake 3.13+
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
-
-# Passing the first stage
-
-The entry point for your HTTP server implementation is in `src/main.cpp`. Study
-and uncomment the relevant code, and then run the command below to execute the
-tests on our servers:
+## Build and run
 
 ```sh
-codecrafters submit
+./run.sh
 ```
 
-Time to move on to the next stage!
+This builds the server into `build/` and starts it on port 4221.
 
-# Stage 2 & beyond
+## Try it
 
-Note: This section is for stages 2 and beyond.
+In another terminal:
 
-1. Ensure you have `cmake` installed locally
-1. Run `./your_program.sh` to run your program, which is implemented in
-   `src/main.cpp`.
-1. Run `codecrafters submit` to submit your solution to CodeCrafters. Test
-   output will be streamed to your terminal.
+```sh
+curl -i http://localhost:4221/            # 200 OK
+curl -i http://localhost:4221/echo/abc    # 200 OK, body "abc"
+curl -i http://localhost:4221/nope        # 404 Not Found
+```
+
+## Routes
+
+| Route | Response |
+|---|---|
+| `GET /` | `200 OK`, no body |
+| `GET /echo/{str}` | `200 OK`, `text/plain` body containing `{str}` |
+| anything else | `404 Not Found` |
+
+## Stages
+
+The server is built up in stages. Each one has a spec in [`stages/`](stages/):
+
+1. [Respond with body](stages/01-echo.md): `/echo/{str}`
+
+The project started from the CodeCrafters "Build Your Own HTTP Server" starter code.

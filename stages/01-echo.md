@@ -40,7 +40,7 @@ The two headers are required for the client to be able to parse the response bod
 
 ## Tests
 
-Run your server with `./your_program.sh`, then in another terminal:
+Run your server with `./run.sh`, then in another terminal:
 
 ```sh
 curl -i http://localhost:4221/echo/abc
