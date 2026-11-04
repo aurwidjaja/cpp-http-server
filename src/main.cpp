@@ -6,8 +6,10 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <format>
 #include <iostream>
 #include <string>
+#include <string_view>
 
 // const so that since we're passing in a pointer it won't modify the value
 // passed in
@@ -17,6 +19,11 @@ std::string extract_path(const std::string& request_body) {
   return request_body.substr(first_space + 1, second_space - first_space - 1);
 }
 
+// Only call this when url_path starts with "/echo/"
+std::string get_echo_body(const std::string& url_path) {
+  constexpr std::string_view key = "/echo/";
+  return url_path.substr(key.size());
+}
 int main(int argc, char** argv) {
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
@@ -85,13 +92,18 @@ int main(int argc, char** argv) {
   std::string request_body(buffer, len_req_bytes);
   std::string url_path = extract_path(request_body);
   const std::string not_found_msg = "HTTP/1.1 404 Not Found\r\n\r\n";
-  const std::string success_msg = "HTTP/1.1 200 OK\r\n\r\n";
-
+  const std::string ok_msg = "HTTP/1.1 200 OK\r\n\r\n";
+  constexpr std::string_view echo_fmt =
+      "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "
+      "{}\r\n\r\n{}";
   std::string msg;
   if (url_path == "/") {
-    std::string msg = success_msg;
+    msg = ok_msg;
+  } else if (url_path.starts_with("/echo/")) {
+    std::string body = get_echo_body(url_path);
+    msg = std::format(echo_fmt, body.size(), body);
   } else {
-    std::string msg = not_found_msg;
+    msg = not_found_msg;
   }
   ssize_t sent = send(client_fd, msg.c_str(), msg.size(), 0);
 
