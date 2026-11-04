@@ -1,6 +1,6 @@
 # cpp-http-server
 
-An HTTP/1.1 server written from scratch in C++, using POSIX sockets directly.
+An HTTP/1.1 server written from scratch in C++, using POSIX sockets directly. Project guided by Claude so spec written out in stages under `stages` dir.
 
 ## Requirements
 
@@ -14,24 +14,6 @@ An HTTP/1.1 server written from scratch in C++, using POSIX sockets directly.
 ```
 
 This builds the server into `build/` and starts it on port 4221.
-
-## Try it
-
-In another terminal:
-
-```sh
-curl -i http://localhost:4221/            # 200 OK
-curl -i http://localhost:4221/echo/abc    # 200 OK, body "abc"
-curl -i http://localhost:4221/nope        # 404 Not Found
-```
-
-## Routes
-
-| Route | Response |
-|---|---|
-| `GET /` | `200 OK`, no body |
-| `GET /echo/{str}` | `200 OK`, `text/plain` body containing `{str}` |
-| anything else | `404 Not Found` |
 
 ## Stages
 
