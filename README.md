@@ -20,5 +20,6 @@ This builds the server into `build/` and starts it on port 4221.
 The server is built up in stages. Each one has a spec in [`stages/`](stages/):
 
 1. [Respond with body](stages/01-echo.md): `/echo/{str}`
+2. [Read a header](stages/02-user-agent.md): `/user-agent`
 
 The project started from the CodeCrafters "Build Your Own HTTP Server" starter code.
