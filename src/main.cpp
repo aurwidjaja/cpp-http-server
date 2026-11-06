@@ -4,13 +4,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include <format>
 #include <iostream>
 #include <string>
 #include <string_view>
-
+#include <unordered_map>
 // const so that since we're passing in a pointer it won't modify the value
 // passed in
 std::string extract_path(const std::string& request_body) {
@@ -18,7 +19,46 @@ std::string extract_path(const std::string& request_body) {
   size_t second_space = request_body.find(' ', first_space + 1);
   return request_body.substr(first_space + 1, second_space - first_space - 1);
 }
+std::string to_lower(std::string s) {
+  for (char& ch : s) {
+    ch = std::tolower(static_cast<unsigned char>(ch));
+  }
+  return s;
+}
 
+std::string trim(const std::string& s) {
+  size_t first = s.find_first_not_of(" \t");
+  if (first == std::string::npos) return "";
+  size_t last = s.find_last_not_of(" \t");
+  return s.substr(first, last - first);
+}
+
+std::unordered_map<std::string, std::string> parse_headers(
+    const std::string& request) {
+  std::unordered_map<std::string, std::string> headers;
+  size_t pos = request.find("\r\n");
+  if (pos == std::string::npos) {
+    return headers;
+  }
+  pos += 2;
+  while (true) {
+    size_t line_end = request.find("\r\n", pos);
+    if (line_end == std::string::npos) {
+      return headers;
+    }
+    if (line_end == pos) {
+      return headers;
+    }
+    std::string line = request.substr(pos, line_end - pos);
+    size_t colon = line.find(':');
+    if (colon != std::string::npos) {
+      std::string name = to_lower(line.substr(0, colon));
+      std::string value = trim(line.substr(colon + 1));
+      headers[name] = value;
+    }
+    pos = line_end + 2;
+  }
+}
 // Only call this when url_path starts with "/echo/"
 std::string get_echo_body(const std::string& url_path) {
   constexpr std::string_view key = "/echo/";
@@ -92,15 +132,20 @@ int main(int argc, char** argv) {
   constexpr std::string_view echo_fmt =
       "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "
       "{}\r\n\r\n{}";
+  auto headers = parse_headers(request_body);  // add this
   std::string msg;
   if (url_path == "/") {
     msg = ok_msg;
   } else if (url_path.starts_with("/echo/")) {
     std::string body = get_echo_body(url_path);
     msg = std::format(echo_fmt, body.size(), body);
+  } else if (url_path == "/user-agent") {
+    std::string body = headers["user-agent"];
+    msg = std::format(echo_fmt, body.size(), body);
   } else {
     msg = not_found_msg;
   }
+
   ssize_t sent = send(client_fd, msg.c_str(), msg.size(), 0);
 
   close(client_fd);
