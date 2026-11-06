@@ -132,15 +132,20 @@ int main(int argc, char** argv) {
   constexpr std::string_view echo_fmt =
       "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "
       "{}\r\n\r\n{}";
+  auto headers = parse_headers(request_body);  // add this
   std::string msg;
   if (url_path == "/") {
     msg = ok_msg;
   } else if (url_path.starts_with("/echo/")) {
     std::string body = get_echo_body(url_path);
     msg = std::format(echo_fmt, body.size(), body);
+  } else if (url_path == "/user-agent") {
+    std::string body = headers["user-agent"];
+    msg = std::format(echo_fmt, body.size(), body);
   } else {
     msg = not_found_msg;
   }
+
   ssize_t sent = send(client_fd, msg.c_str(), msg.size(), 0);
 
   close(client_fd);
