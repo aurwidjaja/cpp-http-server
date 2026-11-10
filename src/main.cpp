@@ -30,7 +30,7 @@ std::string trim(const std::string& s) {
   size_t first = s.find_first_not_of(" \t");
   if (first == std::string::npos) return "";
   size_t last = s.find_last_not_of(" \t");
-  return s.substr(first, last - first);
+  return s.substr(first, last - first + 1);
 }
 
 std::unordered_map<std::string, std::string> parse_headers(
