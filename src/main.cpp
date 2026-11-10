@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <cctype>
+#include <csignal>
 #include <cstdlib>
 #include <cstring>
 #include <format>
@@ -101,6 +102,7 @@ int handle_client(int client_fd) {
   return 0;
 }
 int main(int argc, char** argv) {
+  signal(SIGPIPE, SIG_IGN);  // ignore SIGPIPE: a failed send just returns -1
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
