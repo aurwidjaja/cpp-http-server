@@ -64,6 +64,41 @@ std::string get_echo_body(const std::string& url_path) {
   constexpr std::string_view key = "/echo/";
   return url_path.substr(key.size());
 }
+int handle_client(int client_fd) {
+  std::cout << "Client connected\n";
+  char buffer[4096];
+  ssize_t len_req_bytes = recv(client_fd, &buffer, sizeof(buffer), 0);
+  if (len_req_bytes <= 0) {
+    std::cerr << "Failed to receive client request\n";
+    close(client_fd);
+    return 1;
+  }
+
+  std::string request_body(buffer, len_req_bytes);
+  auto headers = parse_headers(request_body);  // add this
+  std::string url_path = extract_path(request_body);
+  const std::string not_found_msg = "HTTP/1.1 404 Not Found\r\n\r\n";
+  const std::string ok_msg = "HTTP/1.1 200 OK\r\n\r\n";
+  constexpr std::string_view echo_fmt =
+      "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "
+      "{}\r\n\r\n{}";
+  std::string msg;
+  if (url_path == "/") {
+    msg = ok_msg;
+  } else if (url_path.starts_with("/echo/")) {
+    std::string body = get_echo_body(url_path);
+    msg = std::format(echo_fmt, body.size(), body);
+  } else if (url_path == "/user-agent") {
+    std::string body = headers["user-agent"];
+    msg = std::format(echo_fmt, body.size(), body);
+  } else {
+    msg = not_found_msg;
+  }
+
+  ssize_t sent = send(client_fd, msg.c_str(), msg.size(), 0);
+  close(client_fd);
+  return 0;
+}
 int main(int argc, char** argv) {
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
@@ -109,46 +144,15 @@ int main(int argc, char** argv) {
   int client_addr_len = sizeof(client_addr);
 
   std::cout << "Waiting for a client to connect...\n";
-
-  int client_fd = accept(server_fd, (struct sockaddr*)&client_addr,
-                         (socklen_t*)&client_addr_len);
-  if (client_fd < 0) {
-    std::cerr << "Failed to create client socket\n";
-    return 1;
+  while (1) {
+    int client_fd = accept(server_fd, (struct sockaddr*)&client_addr,
+                           (socklen_t*)&client_addr_len);
+    if (client_fd < 0) {
+      std::cerr << "Failed to create client socket\n";
+      return 1;
+    }
+    handle_client(client_fd);
   }
-
-  std::cout << "Client connected\n";
-  char buffer[4096];
-  ssize_t len_req_bytes = recv(client_fd, &buffer, sizeof(buffer), 0);
-  if (len_req_bytes <= 0) {
-    std::cerr << "Failed to receive client request\n";
-    return 1;
-  }
-
-  std::string request_body(buffer, len_req_bytes);
-  std::string url_path = extract_path(request_body);
-  const std::string not_found_msg = "HTTP/1.1 404 Not Found\r\n\r\n";
-  const std::string ok_msg = "HTTP/1.1 200 OK\r\n\r\n";
-  constexpr std::string_view echo_fmt =
-      "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "
-      "{}\r\n\r\n{}";
-  auto headers = parse_headers(request_body);  // add this
-  std::string msg;
-  if (url_path == "/") {
-    msg = ok_msg;
-  } else if (url_path.starts_with("/echo/")) {
-    std::string body = get_echo_body(url_path);
-    msg = std::format(echo_fmt, body.size(), body);
-  } else if (url_path == "/user-agent") {
-    std::string body = headers["user-agent"];
-    msg = std::format(echo_fmt, body.size(), body);
-  } else {
-    msg = not_found_msg;
-  }
-
-  ssize_t sent = send(client_fd, msg.c_str(), msg.size(), 0);
-
-  close(client_fd);
   close(server_fd);
 
   return 0;
