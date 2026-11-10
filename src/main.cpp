@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <unordered_map>
 // const so that since we're passing in a pointer it won't modify the value
 // passed in
@@ -151,7 +152,8 @@ int main(int argc, char** argv) {
       std::cerr << "Failed to create client socket\n";
       return 1;
     }
-    handle_client(client_fd);
+    std::thread t(handle_client, client_fd);
+    t.detach();
   }
   close(server_fd);
 
