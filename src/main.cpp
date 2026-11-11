@@ -101,6 +101,9 @@ int handle_client(int client_fd, std::string directory) {
     std::string body = headers["user-agent"];
     msg = std::format(echo_fmt, body.size(), body);
   } else if (url_path.starts_with("/files/")) {
+    if (directory.empty()) {
+      msg = not_found_msg;
+    }
     std::string_view file = "/files/";
     std::string path = directory + url_path.substr(file.size());
     std::ifstream f(path, std::ios::binary);
@@ -132,6 +135,10 @@ int main(int argc, char** argv) {
       directory = argv[i + 1];
     }
   }
+  if (!directory.empty() && !directory.ends_with('/')) {
+    directory += '/';
+  }
+
   std::cout << "Serving files from: " << directory << "\n";
 
   std::cout << "Starting server on port 4221\n";
