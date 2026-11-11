@@ -86,6 +86,11 @@ int handle_client(int client_fd, std::string directory) {
   constexpr std::string_view echo_fmt =
       "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: "
       "{}\r\n\r\n{}";
+
+  constexpr std::string_view files_fmt =
+      "HTTP/1.1 200 OK\r\nContent-Type: "
+      "application/octet-stream\r\nContent-Length: "
+      "{}\r\n\r\n{}";
   std::string msg;
   if (url_path == "/") {
     msg = ok_msg;
@@ -105,7 +110,7 @@ int handle_client(int client_fd, std::string directory) {
       std::stringstream ss;
       ss << f.rdbuf();
       std::string contents = ss.str();
-      msg = std::format(echo_fmt, contents.size(), contents);
+      msg = std::format(files_fmt, contents.size(), contents);
     }
   } else {
     msg = not_found_msg;
