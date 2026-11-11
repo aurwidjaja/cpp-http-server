@@ -9,7 +9,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <format>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -66,7 +68,7 @@ std::string get_echo_body(const std::string& url_path) {
   constexpr std::string_view key = "/echo/";
   return url_path.substr(key.size());
 }
-int handle_client(int client_fd) {
+int handle_client(int client_fd, std::string directory) {
   std::cout << "Client connected\n";
   char buffer[4096];
   ssize_t len_req_bytes = recv(client_fd, &buffer, sizeof(buffer), 0);
@@ -93,6 +95,18 @@ int handle_client(int client_fd) {
   } else if (url_path == "/user-agent") {
     std::string body = headers["user-agent"];
     msg = std::format(echo_fmt, body.size(), body);
+  } else if (url_path.starts_with("/files/")) {
+    std::string_view file = "/files/";
+    std::string path = directory + url_path.substr(file.size());
+    std::ifstream f(path, std::ios::binary);
+    if (!f) {
+      msg = not_found_msg;
+    } else {
+      std::stringstream ss;
+      ss << f.rdbuf();
+      std::string contents = ss.str();
+      msg = std::format(echo_fmt, contents.size(), contents);
+    }
   } else {
     msg = not_found_msg;
   }
@@ -162,7 +176,7 @@ int main(int argc, char** argv) {
       std::cerr << "Failed to create client socket\n";
       return 1;
     }
-    std::thread t(handle_client, client_fd);
+    std::thread t(handle_client, client_fd, directory);
     t.detach();
   }
   close(server_fd);
