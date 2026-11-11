@@ -68,6 +68,14 @@ int main(int argc, char** argv) {
   // Flush after every std::cout / std::cerr
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
+  std::string directory;
+  for (int i = 1; i < argc; i++) {
+    std::string_view arg = argv[i];
+    if (arg == "--directory" && i + 1 < argc) {
+      directory = argv[i + 1];
+    }
+  }
+  std::cout << "Serving files from: " << directory << "\n";
 
   std::cout << "Starting server on port 4221\n";
 
