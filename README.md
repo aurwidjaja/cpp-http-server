@@ -22,5 +22,6 @@ The server is built up in stages. Each one has a spec in [`stages/`](stages/):
 1. [Respond with body](stages/01-echo.md): `/echo/{str}`
 2. [Read a header](stages/02-user-agent.md): `/user-agent`
 3. [Concurrent connections](stages/03-concurrent.md): keep serving, one thread per client
+4. [Return a file](stages/04-files.md): `/files/{filename}`
 
 The project started from the CodeCrafters "Build Your Own HTTP Server" starter code.
